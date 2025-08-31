@@ -213,7 +213,7 @@ import com.laneful.webhooks.WebhookVerifier;
 
 // In your webhook handler
 String payload = request.getBody(); // Get the raw request body
-String signature = request.getHeader("X-Laneful-Signature");
+String signature = request.getHeader("x-webhook-signature");
 String secret = "your-webhook-secret";
 
 if (WebhookVerifier.verifySignature(secret, payload, signature)) {
