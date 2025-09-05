@@ -89,7 +89,7 @@ The Laneful Java SDK is working correctly with the published library from Maven 
 
 This example uses:
 
-- **Laneful Java SDK** (1.0.0) - The main library from Maven Central
+- **Laneful Java SDK** (1.0.1) - The main library from Maven Central
 - **SLF4J Simple** (2.0.9) - For logging output
 
 All dependencies are automatically resolved by Maven from Maven Central.

@@ -7,7 +7,7 @@
 
     <groupId>com.laneful</groupId>
     <artifactId>laneful-java</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>Laneful Java SDK</name>
@@ -134,6 +134,23 @@
                 <configuration>
                     <doclint>none</doclint>
                     <quiet>true</quiet>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${maven-gpg-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <keyname>CC1B13085579F1C7</keyname>
                 </configuration>
             </plugin>
             <plugin>
