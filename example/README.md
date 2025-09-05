@@ -82,7 +82,6 @@ The Laneful Java SDK is working correctly with the published library from Maven 
 
 ### Getting Help
 
-- Check the [Laneful Documentation](https://docs.laneful.net)
 - Review the [Laneful Java SDK Source](https://github.com/your-org/laneful-java)
 - Contact support through your Laneful dashboard
 
