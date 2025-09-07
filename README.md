@@ -208,6 +208,10 @@ LanefulClient client = new LanefulClient(
 
 ## Webhook Verification
 
+The Java SDK provides comprehensive webhook handling with signature verification, payload parsing, and validation.
+
+### Basic Signature Verification
+
 ```java
 import com.laneful.webhooks.WebhookVerifier;
 
@@ -218,11 +222,87 @@ String secret = "your-webhook-secret";
 
 if (WebhookVerifier.verifySignature(secret, payload, signature)) {
     // Process webhook data
-    Map<String, Object> data = objectMapper.readValue(payload, Map.class);
-    // Handle webhook event
+    WebhookVerifier.WebhookData webhookData = WebhookVerifier.parseWebhookPayload(payload);
+    // Handle webhook events
 } else {
     // Invalid signature
     response.setStatus(401);
+}
+```
+
+### Advanced Webhook Processing
+
+```java
+import com.laneful.webhooks.WebhookVerifier;
+import java.util.Map;
+
+// Complete webhook verification and processing workflow
+try {
+    // Step 1: Get raw payload
+    String payload = request.getBody();
+    
+    // Step 2: Extract signature from headers (supports multiple formats)
+    String signature = WebhookVerifier.extractSignatureFromHeaders(getHeaders(request));
+    
+    // Step 3: Verify signature (supports sha256= prefix)
+    if (!WebhookVerifier.verifySignature(webhookSecret, payload, signature)) {
+        throw new SecurityException("Invalid webhook signature");
+    }
+    
+    // Step 4: Parse and validate payload structure
+    WebhookVerifier.WebhookData webhookData = WebhookVerifier.parseWebhookPayload(payload);
+    
+    // Step 5: Process events (handles both batch and single event formats)
+    for (Map<String, Object> event : webhookData.getEvents()) {
+        String eventType = (String) event.get("event");
+        String email = (String) event.get("email");
+        
+        switch (eventType) {
+            case "delivery":
+                handleDeliveryEvent(event);
+                break;
+            case "open":
+                handleOpenEvent(event);
+                break;
+            case "click":
+                handleClickEvent(event);
+                break;
+            // ... handle other event types
+        }
+    }
+    
+} catch (IllegalArgumentException e) {
+    // Payload validation error
+    response.setStatus(400);
+} catch (Exception e) {
+    // Other errors
+    response.setStatus(401);
+}
+```
+
+### Supported Event Types
+
+- `delivery` - Email delivered successfully
+- `open` - Email opened by recipient
+- `click` - Link clicked in email
+- `bounce` - Email bounced (hard or soft)
+- `drop` - Email dropped (spam, invalid, etc.)
+- `spam_complaint` - Recipient marked email as spam
+- `unsubscribe` - Recipient unsubscribed
+
+### Batch Mode Support
+
+The webhook handler automatically detects and processes both single events and batch events:
+
+```java
+WebhookVerifier.WebhookData webhookData = WebhookVerifier.parseWebhookPayload(payload);
+
+if (webhookData.isBatch()) {
+    // Processing multiple events in batch mode
+    System.out.println("Processing " + webhookData.getEvents().size() + " events in batch");
+} else {
+    // Processing single event
+    System.out.println("Processing single event");
 }
 ```
 
@@ -308,7 +388,19 @@ try {
 
 ### WebhookVerifier
 
-- `boolean verifySignature(String secret, String payload, String signature)` - Verifies webhook signature
+#### Signature Verification
+- `boolean verifySignature(String secret, String payload, String signature)` - Verifies webhook signature (supports sha256= prefix)
+- `String generateSignature(String secret, String payload)` - Generates signature for payload
+- `String generateSignature(String secret, String payload, boolean includePrefix)` - Generates signature with optional prefix
+
+#### Payload Processing
+- `WebhookData parseWebhookPayload(String payload)` - Parse and validate webhook payload structure
+- `String getSignatureHeaderName()` - Get the correct header name for webhook signatures
+- `String extractSignatureFromHeaders(Map<String, String> headers)` - Extract signature from HTTP headers
+
+#### WebhookData
+- `boolean isBatch()` - Returns true if payload contains multiple events
+- `List<Map<String, Object>> getEvents()` - Returns list of parsed events
 
 ## Exception Types
 
