@@ -83,3 +83,4 @@ echo "  ./run-docker.sh ComprehensiveExample"
 echo ""
 echo -e "${BLUE}For help:${NC}"
 echo "  ./run-docker.sh help"
+

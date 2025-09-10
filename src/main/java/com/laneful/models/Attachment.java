@@ -12,7 +12,7 @@ import java.util.Objects;
  * Represents a file attachment for an email.
  */
 public record Attachment(
-    @JsonProperty("filename") String filename,
+    @JsonProperty("file_name") String filename,
     @JsonProperty("content_type") String contentType,
     @JsonProperty("content") String content
 ) {
