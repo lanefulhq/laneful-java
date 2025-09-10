@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  laneful-java-examples:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laneful-java-examples:latest
+    container_name: laneful-java-examples
+    environment:
+      - LANEFUL_BASE_URL=${LANEFUL_BASE_URL}
+      - LANEFUL_AUTH_TOKEN=${LANEFUL_AUTH_TOKEN}
+      - LANEFUL_FROM_EMAIL=${LANEFUL_FROM_EMAIL}
+      - LANEFUL_TO_EMAILS=${LANEFUL_TO_EMAILS}
+      - LANEFUL_WEBHOOK_SECRET=${LANEFUL_WEBHOOK_SECRET}
+      - LANEFUL_WEBHOOK_URL=${LANEFUL_WEBHOOK_URL}
+      - LANEFUL_TEMPLATE_ID=${LANEFUL_TEMPLATE_ID}
+    env_file:
+      - .env
+    volumes:
+      # Mount source code for development
+      - ./src:/app/src
+      # Mount Maven cache for faster builds
+      - maven-cache:/root/.m2
+    networks:
+      - laneful-network
+    # Override the default command
+    command: ["BasicEmailExample"]
+
+  # Service to run webhook handler example
+  webhook-handler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: laneful-java-examples:latest
+    container_name: laneful-webhook-handler
+    environment:
+      - LANEFUL_BASE_URL=${LANEFUL_BASE_URL}
+      - LANEFUL_AUTH_TOKEN=${LANEFUL_AUTH_TOKEN}
+      - LANEFUL_FROM_EMAIL=${LANEFUL_FROM_EMAIL}
+      - LANEFUL_TO_EMAILS=${LANEFUL_TO_EMAILS}
+      - LANEFUL_WEBHOOK_SECRET=${LANEFUL_WEBHOOK_SECRET}
+      - LANEFUL_WEBHOOK_URL=${LANEFUL_WEBHOOK_URL}
+      - LANEFUL_TEMPLATE_ID=${LANEFUL_TEMPLATE_ID}
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - laneful-network
+    command: ["WebhookHandlerExample"]
+
+volumes:
+  maven-cache:
+
+networks:
+  laneful-network:
+    driver: bridge

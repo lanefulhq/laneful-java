@@ -10,6 +10,7 @@ import okhttp3.*;
 import okhttp3.HttpUrl;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +97,7 @@ public class LanefulClient {
      * @throws ValidationException When input validation fails
      */
     public Map<String, Object> sendEmail(Email email) throws ApiException, HttpException, ValidationException {
-        return sendEmails(List.of(email));
+        return sendEmails(Arrays.asList(email));
     }
     
     /**
@@ -162,7 +163,7 @@ public class LanefulClient {
     private Headers getDefaultHeaders() {
         return new Headers.Builder()
                 .add("Authorization", "Bearer " + authToken)
-                .add("content-type", "application/json")
+                .add("Content-Type", "application/json")
                 .add("Accept", "application/json")
                 .add("User-Agent", USER_AGENT)
                 .build();
