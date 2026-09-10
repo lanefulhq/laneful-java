@@ -87,6 +87,9 @@ public class WebhookHandlerExample {
                 String email = (String) event.get("email");
                 
                 switch (eventType) {
+                    case "request":
+                        System.out.println("  ✓ Send request accepted for: " + email);
+                        break;
                     case "delivery":
                         System.out.println("  ✓ Email delivered to: " + email);
                         break;

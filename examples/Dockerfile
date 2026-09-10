@@ -38,7 +38,7 @@ RUN SDK_JAR=$(find /sdk/target -name "*.jar" -not -name "*-sources.jar" -not -na
     -Dfile="$SDK_JAR" \
     -DgroupId=com.laneful \
     -DartifactId=laneful-java \
-    -Dversion=1.1.0 \
+    -Dversion=1.2.0 \
     -Dpackaging=jar
 
 # Build the examples project

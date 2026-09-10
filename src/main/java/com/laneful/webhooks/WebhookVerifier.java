@@ -26,7 +26,7 @@ public class WebhookVerifier {
     
     // Valid event types as documented
     private static final Set<String> VALID_EVENT_TYPES = Set.of(
-        "delivery", "open", "click", "drop", "spam_complaint", "unsubscribe", "bounce"
+        "request", "delivery", "open", "click", "drop", "spam_complaint", "unsubscribe", "bounce"
     );
     
     // UUID pattern for lane_id validation

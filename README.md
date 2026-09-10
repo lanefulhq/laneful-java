@@ -17,7 +17,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>com.laneful</groupId>
     <artifactId>laneful-java</artifactId>
-    <version>1.0.1</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 
@@ -79,8 +79,12 @@ mvn compile exec:java -Dexec.mainClass="com.laneful.examples.ExampleName"
 - File attachments
 - Email tracking (opens, clicks, unsubscribes)
 - Custom headers and reply-to addresses
+- Visible `from_header` and request-level `mail_settings`
 - Scheduled sending
 - Webhook signature verification
+- Domain management (list, create, verify, update email track, delete)
+- Unsubscribe groups
+- Deliverability analytics (spam-ratio radar, Google Postmaster, Microsoft SNDS)
 
 ## Examples
 
@@ -194,6 +198,41 @@ List<Email> emails = List.of(
 Map<String, Object> response = client.sendEmails(emails);
 ```
 
+### Visible From header
+
+```java
+Email email = new Email.Builder()
+    .from(new Address("sender@example.com", "Your Name"))
+    .to(new Address("user@example.com"))
+    .subject("Hello")
+    .textContent("Hello")
+    .fromHeader(new Address("newsletter@example.com", "Newsletter"))
+    .build();
+```
+
+### Mail settings (sandbox and message IDs)
+
+```java
+Map<String, Object> response = client.sendEmail(
+    email,
+    new MailSettings(true, true)
+);
+// response.get("message_ids") is present when returnMessageIds is true
+```
+
+### Tracking with an unsubscribe group
+
+```java
+TrackingSettings tracking = new TrackingSettings(
+    true,
+    true,
+    true,
+    123L,
+    // ignored if unsubscribeGroupId is set
+    "Newsletters"
+);
+```
+
 ### Custom Timeout
 
 ```java
@@ -258,6 +297,9 @@ try {
         String email = (String) event.get("email");
         
         switch (eventType) {
+            case "request":
+                handleRequestEvent(event);
+                break;
             case "delivery":
                 handleDeliveryEvent(event);
                 break;
@@ -282,6 +324,7 @@ try {
 
 ### Supported Event Types
 
+- `request` - Send request accepted
 - `delivery` - Email delivered successfully
 - `open` - Email opened by recipient
 - `click` - Link clicked in email
@@ -344,8 +387,25 @@ try {
 
 #### Methods
 
-- `Map<String, Object> sendEmail(Email email)` - Sends a single email
-- `Map<String, Object> sendEmails(List<Email> emails)` - Sends multiple emails
+Send host (`https://your-endpoint.send.laneful.net`):
+
+- `Map<String, Object> sendEmail(Email email)` / `sendEmail(Email email, MailSettings settings)`
+- `Map<String, Object> sendEmails(List<Email> emails)` / `sendEmails(List<Email> emails, MailSettings settings)`
+
+Organization API host (`https://api.laneful.net`):
+
+- `ListUnsubscribeGroupsResponse listUnsubscribeGroups(long workspaceId, ListUnsubscribeGroupsParams params)`
+- `UnsubscribeGroup createUnsubscribeGroup(long workspaceId, String name)`
+- `UnsubscribeGroup updateUnsubscribeGroup(long workspaceId, long unsubscribeGroupId, String name)`
+- `ListDomainsResponse listDomains(long workspaceId, ListDomainsParams params)`
+- `Domain getDomain(long workspaceId, String domain)`
+- `Domain createDomain(long workspaceId, CreateDomainRequest request)`
+- `Domain updateDomain(long workspaceId, String domain, UpdateDomainRequest request)`
+- `Domain verifyDomain(long workspaceId, String domain)`
+- `SuccessResponse deleteDomain(long workspaceId, String domain)`
+- `ListDomainSpamRatioRadarResponse listDomainSpamRatioRadar(ListDomainSpamRatioRadarParams params)`
+- `ListGooglePostmasterSpamReportsResponse listGooglePostmasterSpamReports(ListGooglePostmasterSpamReportsParams params)`
+- `ListSndsReportsResponse listSndsReports(ListSndsReportsParams params)`
 
 ### Email.Builder
 
@@ -370,6 +430,7 @@ try {
 - `webhookData(Map<String, String> webhookData)` - Webhook data
 - `tag(String tag)` - Email tag
 - `tracking(TrackingSettings tracking)` - Tracking settings
+- `fromHeader(Address fromHeader)` / `fromHeader(String email)` / `fromHeader(String email, String name)` - Visible From header
 
 ### Address
 
@@ -385,6 +446,63 @@ try {
 ### TrackingSettings
 
 - `TrackingSettings(boolean opens, boolean clicks, boolean unsubscribes)` - Creates tracking settings
+- `TrackingSettings(boolean opens, boolean clicks, boolean unsubscribes, Long unsubscribeGroupId, String unsubscribeGroupName)` - Tracking with an unsubscribe group
+
+### MailSettings
+
+- `MailSettings(Boolean sandboxMode, Boolean returnMessageIds)` - Request-level send options
+
+## Domain, unsubscribe groups, and analytics
+
+These endpoints live on the organization API host. Point the client at it:
+
+```java
+LanefulClient client = new LanefulClient(
+    "https://api.laneful.net",
+    "your-auth-token"
+);
+```
+
+### Unsubscribe groups
+
+```java
+var groups = client.listUnsubscribeGroups(42, new ListUnsubscribeGroupsParams(null, 50, null));
+var created = client.createUnsubscribeGroup(42, "Newsletters");
+var updated = client.updateUnsubscribeGroup(42, created.unsubscribeGroupId(), "Weekly Newsletters");
+```
+
+### Domains
+
+```java
+var list = client.listDomains(42, new ListDomainsParams(null, 50, null));
+Domain domain = client.createDomain(42, new CreateDomainRequest("mydomain.com", "tracking", "return-path"));
+domain = client.getDomain(42, "mydomain.com");
+domain = client.verifyDomain(42, "mydomain.com");
+
+// Set the email track; pass "" to clear it, or omit emailTrackId to leave it unchanged
+domain = client.updateDomain(42, "mydomain.com", new UpdateDomainRequest("e59f0a35-05bc-4516-b585-c06f69c3e67e"));
+
+client.deleteDomain(42, "mydomain.com");
+```
+
+### Deliverability analytics
+
+```java
+var radar = client.listDomainSpamRatioRadar(new ListDomainSpamRatioRadarParams(
+    List.of(1L, 2L),
+    "example.com",
+    "2026-09-01",
+    "2026-09-08",
+    null,
+    null
+));
+
+var postmaster = client.listGooglePostmasterSpamReports(
+    new ListGooglePostmasterSpamReportsParams(List.of(), "example.com", null, null, null, null)
+);
+
+var snds = client.listSndsReports(new ListSndsReportsParams("203.0.113.5", null, null, null, null));
+```
 
 ### WebhookVerifier
 

@@ -9,13 +9,13 @@ public class ApiException extends LanefulException {
     private final String errorMessage;
     
     public ApiException(String message, int statusCode, String errorMessage) {
-        super(message);
+        super(errorMessage == null || errorMessage.isEmpty() ? message : message + ": " + errorMessage);
         this.statusCode = statusCode;
         this.errorMessage = errorMessage;
     }
     
     public ApiException(String message, int statusCode, String errorMessage, Throwable cause) {
-        super(message, cause);
+        super(errorMessage == null || errorMessage.isEmpty() ? message : message + ": " + errorMessage, cause);
         this.statusCode = statusCode;
         this.errorMessage = errorMessage;
     }

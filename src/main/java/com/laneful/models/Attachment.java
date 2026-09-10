@@ -14,8 +14,14 @@ import java.util.Objects;
 public record Attachment(
     @JsonProperty("file_name") String filename,
     @JsonProperty("content_type") String contentType,
-    @JsonProperty("content") String content
+    @JsonProperty("content") String content,
+    @JsonProperty("inline_id")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    String inlineId
 ) {
+    public Attachment(String filename, String contentType, String content) {
+        this(filename, contentType, content, null);
+    }
     
     /**
      * Creates an attachment from a file.
@@ -73,10 +79,13 @@ public record Attachment(
      * @throws IllegalArgumentException if the data is invalid
      */
     public static Attachment fromMap(java.util.Map<String, Object> data) throws IllegalArgumentException {
-        String filename = (String) data.get("filename");
+        String filename = data.get("file_name") != null
+            ? String.valueOf(data.get("file_name"))
+            : (String) data.get("filename");
         String contentType = (String) data.get("content_type");
         String content = (String) data.get("content");
-        return new Attachment(filename, contentType, content);
+        String inlineId = data.get("inline_id") == null ? null : String.valueOf(data.get("inline_id"));
+        return new Attachment(filename, contentType, content, inlineId);
     }
     
     @Override

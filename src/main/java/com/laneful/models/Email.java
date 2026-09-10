@@ -15,16 +15,20 @@ public class Email {
     
     @JsonProperty("from")
     private final Address from;
+
+    @JsonProperty("from_header")
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private final Address fromHeader;
     
     @JsonProperty("to")
     private final List<Address> to;
     
     @JsonProperty("cc")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     private final List<Address> cc;
     
     @JsonProperty("bcc")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     private final List<Address> bcc;
     
     @JsonProperty("subject")
@@ -47,7 +51,7 @@ public class Email {
     private final Map<String, Object> templateData;
     
     @JsonProperty("attachments")
-    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY)
     private final List<Attachment> attachments;
     
     @JsonProperty("headers")
@@ -76,15 +80,16 @@ public class Email {
     
     private Email(Builder builder) throws ValidationException {
         this.from = builder.from;
+        this.fromHeader = builder.fromHeader;
         this.to = new ArrayList<>(builder.to);
-        this.cc = new ArrayList<>(builder.cc);
-        this.bcc = new ArrayList<>(builder.bcc);
+        this.cc = builder.cc.isEmpty() ? null : new ArrayList<>(builder.cc);
+        this.bcc = builder.bcc.isEmpty() ? null : new ArrayList<>(builder.bcc);
         this.subject = builder.subject;
         this.textContent = builder.textContent;
         this.htmlContent = builder.htmlContent;
         this.templateId = builder.templateId;
         this.templateData = builder.templateData;
-        this.attachments = new ArrayList<>(builder.attachments);
+        this.attachments = builder.attachments.isEmpty() ? null : new ArrayList<>(builder.attachments);
         this.headers = builder.headers;
         this.replyTo = builder.replyTo;
         this.sendTime = builder.sendTime;
@@ -220,6 +225,16 @@ public class Email {
             Map<String, Object> trackingData = (Map<String, Object>) data.get("tracking");
             builder.tracking(TrackingSettings.fromMap(trackingData));
         }
+
+        if (data.containsKey("from_header")) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> fromHeaderData = (Map<String, Object>) data.get("from_header");
+            try {
+                builder.fromHeader(Address.fromMap(fromHeaderData));
+            } catch (IllegalArgumentException e) {
+                throw new ValidationException("Invalid from_header address: " + e.getMessage(), e);
+            }
+        }
         
         return builder.build();
     }
@@ -230,7 +245,7 @@ public class Email {
         }
         
         // Must have at least one recipient
-        if (to.isEmpty() && cc.isEmpty() && bcc.isEmpty()) {
+        if (to.isEmpty() && (cc == null || cc.isEmpty()) && (bcc == null || bcc.isEmpty())) {
             throw new ValidationException("Email must have at least one recipient (to, cc, or bcc)");
         }
         
@@ -242,6 +257,20 @@ public class Email {
         if (!hasContent && !hasTemplate) {
             throw new ValidationException("Email must have either content (text/HTML) or a template ID");
         }
+
+        if (webhookData != null) {
+            if (webhookData.size() > 20) {
+                throw new ValidationException("Webhook data cannot have more than 20 keys");
+            }
+            for (Map.Entry<String, String> entry : webhookData.entrySet()) {
+                if (entry.getKey() != null && entry.getKey().length() > 50) {
+                    throw new ValidationException("Webhook data keys cannot exceed 50 characters");
+                }
+                if (entry.getValue() != null && entry.getValue().length() > 100) {
+                    throw new ValidationException("Webhook data values cannot exceed 100 characters");
+                }
+            }
+        }
         
         // Validate send time
         if (sendTime != null && sendTime <= Instant.now().getEpochSecond()) {
@@ -251,15 +280,16 @@ public class Email {
     
     // Getters
     public Address getFrom() { return from; }
+    public Address getFromHeader() { return fromHeader; }
     public List<Address> getTo() { return new ArrayList<>(to); }
-    public List<Address> getCc() { return new ArrayList<>(cc); }
-    public List<Address> getBcc() { return new ArrayList<>(bcc); }
+    public List<Address> getCc() { return cc == null ? List.of() : new ArrayList<>(cc); }
+    public List<Address> getBcc() { return bcc == null ? List.of() : new ArrayList<>(bcc); }
     public String getSubject() { return subject; }
     public String getTextContent() { return textContent; }
     public String getHtmlContent() { return htmlContent; }
     public String getTemplateId() { return templateId; }
     public Map<String, Object> getTemplateData() { return templateData; }
-    public List<Attachment> getAttachments() { return new ArrayList<>(attachments); }
+    public List<Attachment> getAttachments() { return attachments == null ? List.of() : new ArrayList<>(attachments); }
     public Map<String, String> getHeaders() { return headers; }
     public Address getReplyTo() { return replyTo; }
     public Long getSendTime() { return sendTime; }
@@ -273,6 +303,7 @@ public class Email {
         if (obj == null || getClass() != obj.getClass()) return false;
         Email email = (Email) obj;
         return Objects.equals(from, email.from) &&
+               Objects.equals(fromHeader, email.fromHeader) &&
                Objects.equals(to, email.to) &&
                Objects.equals(cc, email.cc) &&
                Objects.equals(bcc, email.bcc) &&
@@ -292,7 +323,7 @@ public class Email {
     
     @Override
     public int hashCode() {
-        return Objects.hash(from, to, cc, bcc, subject, textContent, htmlContent,
+        return Objects.hash(from, fromHeader, to, cc, bcc, subject, textContent, htmlContent,
                           templateId, templateData, attachments, headers, replyTo,
                           sendTime, webhookData, tag, tracking);
     }
@@ -315,7 +346,7 @@ public class Email {
                 textContent != null && !textContent.isEmpty(),
                 htmlContent != null && !htmlContent.isEmpty(),
                 templateId,
-                attachments.size()
+                attachments == null ? 0 : attachments.size()
             );
     }
     
@@ -324,6 +355,7 @@ public class Email {
      */
     public static class Builder {
         private Address from;
+        private Address fromHeader;
         private final List<Address> to = new ArrayList<>();
         private final List<Address> cc = new ArrayList<>();
         private final List<Address> bcc = new ArrayList<>();
@@ -343,6 +375,19 @@ public class Email {
         public Builder from(Address from) {
             this.from = from;
             return this;
+        }
+
+        public Builder fromHeader(Address fromHeader) {
+            this.fromHeader = fromHeader;
+            return this;
+        }
+
+        public Builder fromHeader(String email) {
+            return fromHeader(new Address(email));
+        }
+
+        public Builder fromHeader(String email, String name) {
+            return fromHeader(new Address(email, name));
         }
         
         public Builder to(Address to) {
