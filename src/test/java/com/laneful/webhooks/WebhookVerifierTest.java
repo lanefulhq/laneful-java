@@ -132,7 +132,7 @@ class WebhookVerifierTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"delivery", "open", "click", "drop", "spam_complaint", "unsubscribe", "bounce"})
+    @ValueSource(strings = {"request", "delivery", "open", "click", "drop", "spam_complaint", "unsubscribe", "bounce"})
     void testValidEventTypes(String eventType) {
         String payload = String.format("{\"event\":\"%s\",\"email\":\"user@example.com\",\"lane_id\":\"5805dd85-ed8c-44db-91a7-1d53a41c86a5\",\"message_id\":\"H-1-019844e340027d728a7cfda632e14d0a\",\"timestamp\":1753502407}", eventType);
 
