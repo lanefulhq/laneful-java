@@ -73,7 +73,7 @@ class LanefulClientTest {
         assertEquals("/v1/email/send", request.getPath());
         assertTrue(request.getBody().readUtf8().contains("\"sandbox_mode\":true"));
         assertEquals("accepted", response.get("status"));
-        assertEquals("laneful-java/1.2.0", request.getHeader("User-Agent"));
+        assertEquals("laneful-java/1.3.0", request.getHeader("User-Agent"));
         assertEquals("application/json", request.getHeader("Content-Type"));
     }
 
