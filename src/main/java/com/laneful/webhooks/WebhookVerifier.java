@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Utility class for verifying webhook signatures and processing webhook payloads.
@@ -23,17 +22,6 @@ public class WebhookVerifier {
     private static final String SIGNATURE_PREFIX = "sha256=";
     private static final String SIGNATURE_HEADER_NAME = "x-webhook-signature";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    
-    // Valid event types as documented
-    private static final Set<String> VALID_EVENT_TYPES = Set.of(
-        "request", "delivery", "open", "click", "drop", "spam_complaint", "unsubscribe", "bounce"
-    );
-    
-    // UUID pattern for lane_id validation
-    private static final Pattern UUID_PATTERN = Pattern.compile(
-        "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", 
-        Pattern.CASE_INSENSITIVE
-    );
     
     /**
      * Verifies a webhook signature with support for sha256= prefix.
@@ -168,12 +156,6 @@ public class WebhookVerifier {
             eventMap.put(field, eventObj.get(field).asText());
         }
         
-        // Validate event type
-        String eventType = eventMap.get("event").toString();
-        if (!VALID_EVENT_TYPES.contains(eventType)) {
-            throw new IllegalArgumentException("Invalid event type: " + eventType);
-        }
-        
         // Validate email format
         String email = eventMap.get("email").toString();
         if (!isValidEmail(email)) {
@@ -188,44 +170,21 @@ public class WebhookVerifier {
             throw new IllegalArgumentException("Invalid timestamp format");
         }
         
-        // Validate lane_id is a valid UUID format
-        String laneId = eventMap.get("lane_id").toString();
-        if (!UUID_PATTERN.matcher(laneId).matches()) {
-            throw new IllegalArgumentException("Invalid lane_id format: " + laneId);
+        // Keep every other field Laneful sends (id, mx_host, code, is_machine, ...) with its
+        // JSON type. Event types and lane_id are not checked: request events have an empty
+        // lane_id, and new event types must not make the whole payload fail.
+        Map<String, Object> allFields = OBJECT_MAPPER.convertValue(eventObj, Map.class);
+        for (Map.Entry<String, Object> field : allFields.entrySet()) {
+            eventMap.putIfAbsent(field.getKey(), field.getValue());
         }
-        
-        // Add optional fields
-        if (eventObj.has("metadata")) {
-            eventMap.put("metadata", OBJECT_MAPPER.convertValue(eventObj.get("metadata"), Map.class));
+        // Earlier versions returned these as strings.
+        for (String field : new String[] {"tag", "url", "text", "reason", "unsubscribe_group_id",
+                "client_device", "client_os", "client_ip"}) {
+            if (eventObj.has(field)) {
+                eventMap.put(field, eventObj.get(field).asText());
+            }
         }
-        if (eventObj.has("tag")) {
-            eventMap.put("tag", eventObj.get("tag").asText());
-        }
-        if (eventObj.has("url")) {
-            eventMap.put("url", eventObj.get("url").asText());
-        }
-        if (eventObj.has("is_hard")) {
-            eventMap.put("is_hard", eventObj.get("is_hard").asBoolean());
-        }
-        if (eventObj.has("text")) {
-            eventMap.put("text", eventObj.get("text").asText());
-        }
-        if (eventObj.has("reason")) {
-            eventMap.put("reason", eventObj.get("reason").asText());
-        }
-        if (eventObj.has("unsubscribe_group_id")) {
-            eventMap.put("unsubscribe_group_id", eventObj.get("unsubscribe_group_id").asText());
-        }
-        if (eventObj.has("client_device")) {
-            eventMap.put("client_device", eventObj.get("client_device").asText());
-        }
-        if (eventObj.has("client_os")) {
-            eventMap.put("client_os", eventObj.get("client_os").asText());
-        }
-        if (eventObj.has("client_ip")) {
-            eventMap.put("client_ip", eventObj.get("client_ip").asText());
-        }
-        
+
         return eventMap;
     }
     

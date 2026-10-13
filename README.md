@@ -348,6 +348,14 @@ try {
 - `spam_complaint` - Recipient marked email as spam
 - `unsubscribe` - Recipient unsubscribed
 
+`parseWebhookPayload` keeps events of types not listed here instead of rejecting the payload, so new event types don't break your endpoint; skip the ones you don't handle.
+
+### Event Fields
+
+Each parsed event map contains every field Laneful sends. Every event has `id`, `event`, `email`, `message_id`, `lane_id`, `tag`, `timestamp` and `metadata` (the `webhookData` sent with the email); `lane_id` is empty on `request` events. Event-specific fields such as `url`, `client_ip`, `is_machine`, `code`, `is_hard`, `classification`, `reason` and `mx_host` are included too. `id` is unique per event and stays the same when Laneful delivers the event again on retry or in a batch, so use it to skip events you have already processed.
+
+`event`, `email`, `lane_id`, `message_id`, `timestamp`, `tag`, `url`, `text`, `reason`, `unsubscribe_group_id` and the `client_*` fields are strings; other fields keep their JSON types.
+
 ### Batch Mode Support
 
 The webhook handler automatically detects and processes both single events and batch events:
@@ -535,7 +543,7 @@ var snds = client.listSndsReports(new ListSndsReportsParams("203.0.113.5", null,
 
 #### WebhookData
 - `boolean isBatch()` - Returns true if payload contains multiple events
-- `List<Map<String, Object>> getEvents()` - Returns list of parsed events
+- `List<Map<String, Object>> getEvents()` - Returns list of parsed events, each with every field Laneful sent
 
 ## Exception Types
 
