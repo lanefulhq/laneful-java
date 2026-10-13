@@ -86,6 +86,18 @@ class ModelTests {
         String json = mapper.writeValueAsString(new MailSettings(true, false));
         assertTrue(json.contains("\"sandbox_mode\":true"));
         assertTrue(json.contains("\"return_message_ids\":false"));
+        assertFalse(json.contains("idempotency_key"));
+    }
+
+    @Test
+    void mailSettingsIdempotencyKey() throws Exception {
+        String json = mapper.writeValueAsString(new MailSettings().withIdempotencyKey("order-1234"));
+        assertEquals("{\"idempotency_key\":\"order-1234\"}", json);
+
+        new MailSettings(null, null, "k".repeat(36));
+        for (String key : new String[] {"", "k".repeat(37), "é".repeat(19)}) {
+            assertThrows(IllegalArgumentException.class, () -> new MailSettings(null, null, key));
+        }
     }
 
     @Test

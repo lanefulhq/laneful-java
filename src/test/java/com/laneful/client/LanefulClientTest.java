@@ -78,6 +78,19 @@ class LanefulClientTest {
     }
 
     @Test
+    void sendEmailIncludesIdempotencyKey() throws Exception {
+        server.enqueue(new MockResponse()
+            .setBody("{\"status\":\"accepted\"}")
+            .setHeader("Content-Type", "application/json"));
+
+        client.sendEmail(sampleEmail(), new MailSettings(null, true, "order-1234"));
+        String body = server.takeRequest().getBody().readUtf8();
+
+        assertTrue(body.contains("\"idempotency_key\":\"order-1234\""));
+        assertTrue(body.contains("\"return_message_ids\":true"));
+    }
+
+    @Test
     void listUnsubscribeGroupsBuildsQuery() throws Exception {
         server.enqueue(new MockResponse()
             .setBody("{\"unsubscribe_groups\":[{\"unsubscribe_group_id\":9,\"name\":\"Newsletters\",\"created_at\":1710000000}],\"next_cursor\":\"abc\"}")
