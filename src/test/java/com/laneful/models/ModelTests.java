@@ -90,6 +90,14 @@ class ModelTests {
     }
 
     @Test
+    void addressWithoutNameOmitsName() throws Exception {
+        // The API rejects "name": null with "JSON data error".
+        assertEquals("{\"email\":\"user@example.com\"}", mapper.writeValueAsString(new Address("user@example.com")));
+        assertEquals("{\"email\":\"user@example.com\",\"name\":\"User\"}",
+            mapper.writeValueAsString(new Address("user@example.com", "User")));
+    }
+
+    @Test
     void mailSettingsIdempotencyKey() throws Exception {
         String json = mapper.writeValueAsString(new MailSettings().withIdempotencyKey("order-1234"));
         assertEquals("{\"idempotency_key\":\"order-1234\"}", json);
