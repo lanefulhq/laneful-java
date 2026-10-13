@@ -3,6 +3,7 @@ package com.laneful.examples;
 import com.laneful.client.LanefulClient;
 import com.laneful.exceptions.ApiException;
 import com.laneful.exceptions.HttpException;
+import com.laneful.exceptions.ValidationException;
 import com.laneful.models.ListDomainSpamRatioRadarParams;
 import com.laneful.models.ListGooglePostmasterSpamReportsParams;
 import com.laneful.models.ListSndsReportsParams;
@@ -44,7 +45,7 @@ public class AnalyticsExample {
                 System.out.println(report.date() + " " + report.ip() + ": filter=" + report.filterResult()
                     + " complaint=" + report.complaintRate() + "%")
             );
-        } catch (ApiException | HttpException e) {
+        } catch (ValidationException | ApiException | HttpException e) {
             System.err.println("Analytics API error: " + e.getMessage());
         }
     }

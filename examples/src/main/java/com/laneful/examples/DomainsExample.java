@@ -3,6 +3,7 @@ package com.laneful.examples;
 import com.laneful.client.LanefulClient;
 import com.laneful.exceptions.ApiException;
 import com.laneful.exceptions.HttpException;
+import com.laneful.exceptions.ValidationException;
 import com.laneful.models.CreateDomainRequest;
 import com.laneful.models.Domain;
 import com.laneful.models.ListDomainsParams;
@@ -41,7 +42,7 @@ public class DomainsExample {
                 new UpdateDomainRequest("e59f0a35-05bc-4516-b585-c06f69c3e67e")
             );
             System.out.println("Email track: " + domain.emailTrackId());
-        } catch (ApiException | HttpException e) {
+        } catch (ValidationException | ApiException | HttpException e) {
             System.err.println("Domain API error: " + e.getMessage());
         }
     }
