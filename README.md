@@ -262,7 +262,7 @@ LanefulClient client = new LanefulClient(
 
 ## Webhook Verification
 
-The Java SDK provides comprehensive webhook handling with signature verification, payload parsing, and validation.
+The Java SDK provides comprehensive webhook handling with signature verification, payload parsing, and validation. See `examples/src/main/java/com/laneful/examples/WebhookReceiverExample.java` for a runnable HTTP receiver.
 
 ### Basic Signature Verification
 

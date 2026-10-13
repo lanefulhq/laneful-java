@@ -74,6 +74,7 @@ else\n\
     echo "  BatchEmailExample"\n\
     echo "  ErrorHandlingExample"\n\
     echo "  WebhookHandlerExample"\n\
+    echo "  WebhookReceiverExample"\n\
     echo "  ComprehensiveExample"\n\
     echo ""\n\
     echo "Usage: docker run --env-file .env laneful-java-examples [ExampleName]"\n\
