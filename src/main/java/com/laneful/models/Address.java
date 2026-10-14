@@ -7,6 +7,7 @@ import java.util.Objects;
 /**
  * Represents an email address with an optional name.
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record Address(
     @JsonProperty("email") String email,
     @JsonProperty("name") String name

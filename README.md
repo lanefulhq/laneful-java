@@ -17,7 +17,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>com.laneful</groupId>
     <artifactId>laneful-java</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -222,6 +222,19 @@ Map<String, Object> response = client.sendEmail(
 // response.get("message_ids") is present when returnMessageIds is true
 ```
 
+### Duplicate send protection
+
+Pass an idempotency key (1 to 36 bytes) and reuse it when you retry a send, for example after a timeout. The client does not retry on its own.
+
+```java
+Map<String, Object> response = client.sendEmail(
+    email,
+    new MailSettings().withIdempotencyKey("order-" + orderId)
+);
+```
+
+Laneful remembers a key per organization for one hour. A repeated request with the same key gets status `accepted` with no message IDs and sends nothing, even if the emails differ, so use a new key for every distinct send. Detection is best effort. A request that fails with HTTP 500 doesn't keep its key, so a retry with it is processed as a new request: before resending after a 500, check your webhook events (a `request` event means Laneful accepted the email). Sandbox mode requests are not deduplicated. A key outside 1 to 36 bytes throws `IllegalArgumentException`.
+
 ### Tracking with an unsubscribe group
 
 ```java
@@ -249,7 +262,7 @@ LanefulClient client = new LanefulClient(
 
 ## Webhook Verification
 
-The Java SDK provides comprehensive webhook handling with signature verification, payload parsing, and validation.
+The Java SDK provides comprehensive webhook handling with signature verification, payload parsing, and validation. See `examples/src/main/java/com/laneful/examples/WebhookReceiverExample.java` for a runnable HTTP receiver.
 
 ### Basic Signature Verification
 
@@ -334,6 +347,14 @@ try {
 - `drop` - Email dropped (spam, invalid, etc.)
 - `spam_complaint` - Recipient marked email as spam
 - `unsubscribe` - Recipient unsubscribed
+
+`parseWebhookPayload` keeps events of types not listed here instead of rejecting the payload, so new event types don't break your endpoint; skip the ones you don't handle.
+
+### Event Fields
+
+Each parsed event map contains every field Laneful sends. Every event has `id`, `event`, `email`, `message_id`, `lane_id`, `tag`, `timestamp` and `metadata` (the `webhookData` sent with the email); `lane_id` is empty on `request` events. Event-specific fields such as `url`, `client_ip`, `is_machine`, `code`, `is_hard`, `classification`, `reason` and `mx_host` are included too. `id` is unique per event and stays the same when Laneful delivers the event again on retry or in a batch, so use it to skip events you have already processed.
+
+`event`, `email`, `lane_id`, `message_id`, `timestamp`, `tag`, `url`, `text`, `reason`, `unsubscribe_group_id` and the `client_*` fields are strings; other fields keep their JSON types.
 
 ### Batch Mode Support
 
@@ -453,6 +474,8 @@ Organization API host (`https://api.laneful.net`):
 ### MailSettings
 
 - `MailSettings(Boolean sandboxMode, Boolean returnMessageIds)` - Request-level send options
+- `MailSettings(Boolean sandboxMode, Boolean returnMessageIds, String idempotencyKey)` - With an idempotency key (1 to 36 bytes)
+- `MailSettings withIdempotencyKey(String idempotencyKey)` - Copy with the given idempotency key
 
 ## Domain, unsubscribe groups, and analytics
 
@@ -520,7 +543,7 @@ var snds = client.listSndsReports(new ListSndsReportsParams("203.0.113.5", null,
 
 #### WebhookData
 - `boolean isBatch()` - Returns true if payload contains multiple events
-- `List<Map<String, Object>> getEvents()` - Returns list of parsed events
+- `List<Map<String, Object>> getEvents()` - Returns list of parsed events, each with every field Laneful sent
 
 ## Exception Types
 

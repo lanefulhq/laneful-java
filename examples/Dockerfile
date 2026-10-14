@@ -38,7 +38,7 @@ RUN SDK_JAR=$(find /sdk/target -name "*.jar" -not -name "*-sources.jar" -not -na
     -Dfile="$SDK_JAR" \
     -DgroupId=com.laneful \
     -DartifactId=laneful-java \
-    -Dversion=1.2.0 \
+    -Dversion=1.3.0 \
     -Dpackaging=jar
 
 # Build the examples project
@@ -74,6 +74,7 @@ else\n\
     echo "  BatchEmailExample"\n\
     echo "  ErrorHandlingExample"\n\
     echo "  WebhookHandlerExample"\n\
+    echo "  WebhookReceiverExample"\n\
     echo "  ComprehensiveExample"\n\
     echo ""\n\
     echo "Usage: docker run --env-file .env laneful-java-examples [ExampleName]"\n\

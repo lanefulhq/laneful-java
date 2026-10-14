@@ -97,6 +97,7 @@ mvn exec:java -Dexec.mainClass="com.laneful.examples.BasicEmailExample"
 |---------|-------------|----------------|---------------|
 | `ErrorHandlingExample` | Comprehensive error handling | `docker run --rm --env-file .env laneful-java-examples:latest ErrorHandlingExample` | `mvn exec:java -Dexec.mainClass="com.laneful.examples.ErrorHandlingExample"` |
 | `WebhookHandlerExample` | Webhook signature verification and processing | `docker run --rm --env-file .env laneful-java-examples:latest WebhookHandlerExample` | `mvn exec:java -Dexec.mainClass="com.laneful.examples.WebhookHandlerExample"` |
+| `WebhookReceiverExample` | HTTP webhook receiver: verifies the signature and logs single or batch events (`LANEFUL_WEBHOOK_SECRET`, `PORT`) | `docker run --rm --env-file .env -p 8000:8000 laneful-java-examples:latest WebhookReceiverExample` | `mvn exec:java -Dexec.mainClass="com.laneful.examples.WebhookReceiverExample"` |
 | `ComprehensiveExample` | All features in one example | `docker run --rm --env-file .env laneful-java-examples:latest ComprehensiveExample` | `mvn exec:java -Dexec.mainClass="com.laneful.examples.ComprehensiveExample"` |
 | `MailSettingsExample` | Sandbox send + From header | `docker run --rm --env-file .env laneful-java-examples:latest MailSettingsExample` | `mvn exec:java -Dexec.mainClass="com.laneful.examples.MailSettingsExample"` |
 | `DomainsExample` | Domain management | `docker run --rm --env-file .env laneful-java-examples:latest DomainsExample` | `mvn exec:java -Dexec.mainClass="com.laneful.examples.DomainsExample"` |
