@@ -3,6 +3,7 @@ package com.laneful.examples;
 import com.laneful.client.LanefulClient;
 import com.laneful.exceptions.ApiException;
 import com.laneful.exceptions.HttpException;
+import com.laneful.exceptions.ValidationException;
 import com.laneful.models.ListUnsubscribeGroupsParams;
 import com.laneful.models.UnsubscribeGroup;
 
@@ -34,7 +35,7 @@ public class UnsubscribeGroupsExample {
             for (UnsubscribeGroup group : list.unsubscribeGroups()) {
                 System.out.println("- " + group.unsubscribeGroupId() + " " + group.name());
             }
-        } catch (ApiException | HttpException e) {
+        } catch (ValidationException | ApiException | HttpException e) {
             System.err.println("Unsubscribe group API error: " + e.getMessage());
         }
     }

@@ -62,13 +62,14 @@ try {
 
 ## Examples
 
-The SDK includes comprehensive examples demonstrating all features. Check the `src/main/java/com/laneful/examples/` directory for available examples.
+The SDK includes comprehensive examples demonstrating all features. They are a separate Maven project in the [`examples/`](examples/) directory (sources under `examples/src/main/java/com/laneful/examples/`).
 
 To run any example:
 
 ```bash
-# Compile and run an example
-mvn compile exec:java -Dexec.mainClass="com.laneful.examples.ExampleName"
+# Compile and run an example from the examples project
+cd examples
+mvn compile exec:java -Dexec.mainClass="com.laneful.examples.BasicEmailExample"
 ```
 
 ## Features
@@ -94,6 +95,7 @@ mvn compile exec:java -Dexec.mainClass="com.laneful.examples.ExampleName"
 Email email = new Email.Builder()
     .from(new Address("sender@example.com"))
     .to(new Address("user@example.com"))
+    .subject("Welcome!") // Required, also for template emails
     .templateId("welcome-template")
     .templateData(Map.of(
         "name", "John Doe",
