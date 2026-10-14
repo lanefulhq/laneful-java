@@ -54,7 +54,7 @@ public class LanefulClient {
     
     private static final String API_VERSION = "v1";
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(30);
-    private static final String USER_AGENT = "laneful-java/1.2.0";
+    private static final String USER_AGENT = "laneful-java/1.3.0";
     
     private final String baseUrl;
     private final String authToken;

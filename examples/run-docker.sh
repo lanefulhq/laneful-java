@@ -47,6 +47,7 @@ show_usage() {
     echo "  BatchEmailExample"
     echo "  ErrorHandlingExample"
     echo "  WebhookHandlerExample"
+    echo "  WebhookReceiverExample"
     echo "  ComprehensiveExample"
     echo ""
     echo -e "${BLUE}Examples:${NC}"
