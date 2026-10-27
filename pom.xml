@@ -7,7 +7,7 @@
 
     <groupId>com.laneful</groupId>
     <artifactId>laneful-java</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
     <packaging>jar</packaging>
 
     <name>Laneful Java SDK</name>

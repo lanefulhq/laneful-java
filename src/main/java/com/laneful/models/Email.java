@@ -2,6 +2,7 @@ package com.laneful.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.laneful.exceptions.ValidationException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -262,12 +263,13 @@ public class Email {
             if (webhookData.size() > 20) {
                 throw new ValidationException("Webhook data cannot have more than 20 keys");
             }
+            // The send API counts UTF-8 bytes, so "é" counts as 2.
             for (Map.Entry<String, String> entry : webhookData.entrySet()) {
-                if (entry.getKey() != null && entry.getKey().length() > 50) {
-                    throw new ValidationException("Webhook data keys cannot exceed 50 characters");
+                if (entry.getKey() != null && utf8Length(entry.getKey()) > 50) {
+                    throw new ValidationException("Webhook data keys cannot exceed 50 bytes (UTF-8)");
                 }
-                if (entry.getValue() != null && entry.getValue().length() > 100) {
-                    throw new ValidationException("Webhook data values cannot exceed 100 characters");
+                if (entry.getValue() != null && utf8Length(entry.getValue()) > 100) {
+                    throw new ValidationException("Webhook data values cannot exceed 100 bytes (UTF-8)");
                 }
             }
         }
@@ -276,6 +278,10 @@ public class Email {
         if (sendTime != null && sendTime <= Instant.now().getEpochSecond()) {
             throw new ValidationException("Send time must be in the future");
         }
+    }
+
+    private static int utf8Length(String value) {
+        return value.getBytes(StandardCharsets.UTF_8).length;
     }
     
     // Getters
