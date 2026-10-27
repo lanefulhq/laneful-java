@@ -3,6 +3,8 @@ package com.laneful.models;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.laneful.exceptions.ValidationException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,6 +70,26 @@ class ModelTests {
                 .build()
         );
         assertTrue(ex.getMessage().contains("20 keys"));
+    }
+
+    // "é" is 2 bytes in UTF-8: 25 fill a 50-byte key and 50 fill a 100-byte value.
+    @ParameterizedTest
+    @CsvSource(value = {"25, 50, NONE", "26, 1, 50 bytes", "1, 51, 100 bytes"})
+    void webhookDataCountsUtf8Bytes(int keyChars, int valueChars, String expectedError) throws Exception {
+        Map<String, String> data = Map.of("é".repeat(keyChars), "é".repeat(valueChars));
+        Email.Builder builder = new Email.Builder()
+            .from(new Address("sender@example.com"))
+            .to(new Address("to@example.com"))
+            .subject("Test")
+            .textContent("Content")
+            .webhookData(data);
+
+        if (expectedError.equals("NONE")) {
+            assertEquals(data, builder.build().getWebhookData());
+        } else {
+            ValidationException ex = assertThrows(ValidationException.class, builder::build);
+            assertTrue(ex.getMessage().contains(expectedError), ex.getMessage());
+        }
     }
 
     @Test
